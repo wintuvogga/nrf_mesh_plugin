@@ -239,6 +239,7 @@ Future<ProvisionedMeshNode> _provisioning(
   // when we received the mesh composition data from the newly provisioned node, we should bind to the network using ConfigAppKey msg
   _onConfigCompositionDataStatusSubscription = meshManagerApi.onConfigCompositionDataStatus.listen((event) async {
     events?._onConfigCompositionDataStatusController.add(deviceToProvision);
+    await Future.delayed(const Duration(milliseconds: 10));
     await meshManagerApi.sendConfigAppKeyAdd(await provisionedMeshNode.unicastAddress);
   });
   // when ConfigAppKey has been received, the provisioning is successful !

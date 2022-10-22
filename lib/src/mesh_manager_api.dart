@@ -49,6 +49,8 @@ class MeshManagerApi {
   late final _onLightCtlStatusController = StreamController<LightCtlStatusData>.broadcast();
   late final _onLightHslStatusController = StreamController<LightHslStatusData>.broadcast();
   late final _onConfigKeyRefreshPhaseStatusController = StreamController<ConfigKeyRefreshPhaseStatus>.broadcast();
+  late final _onVendorMessageStatusController = StreamController<VendorModelStatusData>.broadcast();
+
   // stream subs
   late StreamSubscription<MeshNetwork> _onNetworkLoadedSubscription;
   late StreamSubscription<MeshNetwork> _onNetworkImportedSubscription;
@@ -79,6 +81,7 @@ class MeshManagerApi {
   late StreamSubscription<LightCtlStatusData> _onLightCtlStatusSubscription;
   late StreamSubscription<LightHslStatusData> _onLightHslStatusSubscription;
   late StreamSubscription<ConfigKeyRefreshPhaseStatus> _onConfigKeyRefreshPhaseStatusSubscription;
+  late StreamSubscription<VendorModelStatusData> _onVendorMessageStatusSubscription;
 
   MeshNetwork? _lastMeshNetwork;
 
@@ -200,6 +203,10 @@ class MeshManagerApi {
         .where((event) => event['eventName'] == MeshManagerApiEvent.configBeaconStatus.value)
         .map((event) => ConfigBeaconStatus.fromJson(event))
         .listen(_onConfigBeaconStatusController.add);
+    _onVendorMessageStatusSubscription = _eventChannelStream
+        .where((event) => event['eventName'] == MeshManagerApiEvent.vendorMessageStatus.value)
+        .map((event) => VendorModelStatusData.fromJson(event))
+        .listen(_onVendorMessageStatusController.add);
   }
   Stream<ConfigBeaconStatus> get onConfigBeaconStatus => _onConfigBeaconStatusController.stream;
 
@@ -262,6 +269,9 @@ class MeshManagerApi {
 
   Stream<ConfigKeyRefreshPhaseStatus> get onConfigKeyRefreshPhaseStatus =>
       _onConfigKeyRefreshPhaseStatusController.stream;
+
+  Stream<VendorModelStatusData> get onVendorMessageStatus =>
+      _onVendorMessageStatusController.stream;
 
   /// Checks if the node is advertising with Node Identity
   Future<bool> isAdvertisedWithNodeIdentity(final List<int> serviceData) async {
@@ -356,7 +366,9 @@ class MeshManagerApi {
         _onConfigKeyRefreshPhaseStatusSubscription.cancel(),
         _onConfigKeyRefreshPhaseStatusController.close(),
         _onConfigBeaconStatusSubscription.cancel(),
-        _onConfigBeaconStatusController.close()
+        _onConfigBeaconStatusController.close(),
+        _onVendorMessageStatusSubscription.cancel(),
+        _onVendorMessageStatusController.close()
       ]);
 
   /// Loads the mesh network from the local database.
@@ -724,6 +736,52 @@ class MeshManagerApi {
       'saturation': saturation,
       'sequenceNumber': sequenceNumber,
       'keyIndex': keyIndex,
+    });
+    return status;
+  }
+
+  // Will send a acknowledged vendor model message to the given [address].
+  Future<VendorModelStatusData> sendVendorModelMessageAcked(
+    int address,
+    int modelId,
+    int keyIndex,
+    int companyIdentifier,
+    int opCode,
+    List<int> params) async {
+  final status = _onVendorMessageStatusController.stream.firstWhere(
+    (element) => element.source == address,
+    orElse: () => const VendorModelStatusData(-1, []),
+  );
+  await _methodChannel.invokeMethod('sendVendorModelMessageAcked', {
+    'address': address,
+    'modelId': modelId,
+    'keyIndex': keyIndex,
+    'companyIdentifier': companyIdentifier,
+    'opCode': opCode,
+    'params': params
+  });
+  return status;
+ }
+
+  // Will send a unacknowledged vendor model message to the given [address].
+  Future<VendorModelStatusData> sendVendorModelMessageUnacked(
+    int address,
+    int modelId,
+    int keyIndex,
+    int companyIdentifier,
+    int opCode,
+    List<int> params) async {
+      final status = _onVendorMessageStatusController.stream.firstWhere(
+      (element) => element.source == address,
+      orElse: () => const VendorModelStatusData(-1, []),
+    );
+    await _methodChannel.invokeMethod('sendVendorModelMessageUnacked', {
+      'address': address,
+      'modelId': modelId,
+      'keyIndex': keyIndex,
+      'companyIdentifier': companyIdentifier,
+      'opCode': opCode,
+      'params': params
     });
     return status;
   }

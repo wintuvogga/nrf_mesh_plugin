@@ -176,6 +176,41 @@ class DoozMeshManagerApi(context: Context, binaryMessenger: BinaryMessenger) : S
                 mMeshManagerApi.createMeshPdu(address, meshMessage)
                 result.success(null)
             }
+            "sendVendorModelMessageAcked" -> {
+                val address = call.argument<Int>("address")!!
+                val modelId = call.argument<Int>("modelId")!!
+                val keyIndex = call.argument<Int>("keyIndex")!!
+                val companyIdentifier = call.argument<Int>("companyIdentifier")!!
+                val opCode = call.argument<Int>("opCode")!!
+                val params = call.argument<ArrayList<Int>>("params")!!
+                
+                val meshMessage: MeshMessage = VendorModelMessageAcked(
+                        mMeshManagerApi.meshNetwork!!.getAppKey(keyIndex),
+                        modelId,
+                        companyIdentifier,
+                        opCode,
+                        arrayListToByteArray(params)
+                )
+                mMeshManagerApi.createMeshPdu(address, meshMessage)
+                result.success(null)
+            }
+            "sendVendorModelMessageUnacked" -> {
+                val address = call.argument<Int>("address")!!
+                val modelId = call.argument<Int>("modelId")!!
+                val keyIndex = call.argument<Int>("keyIndex")!!
+                val companyIdentifier = call.argument<Int>("companyIdentifier")!!
+                val opCode = call.argument<Int>("opCode")!!
+                val params = call.argument<ArrayList<Int>>("params")!!
+                val meshMessage: MeshMessage = VendorModelMessageUnacked(
+                        mMeshManagerApi.meshNetwork!!.getAppKey(keyIndex),
+                        modelId,
+                        companyIdentifier,
+                        opCode,
+                        arrayListToByteArray(params)
+                )
+                mMeshManagerApi.createMeshPdu(address, meshMessage)
+                result.success(null)
+            }
             "getSNBeacon" -> {
                 val address = call.argument<Int>("address")!!
                 val meshMessage: MeshMessage = ConfigBeaconGet()
