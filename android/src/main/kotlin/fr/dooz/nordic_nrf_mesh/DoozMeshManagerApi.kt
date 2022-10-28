@@ -176,6 +176,14 @@ class DoozMeshManagerApi(context: Context, binaryMessenger: BinaryMessenger) : S
                 mMeshManagerApi.createMeshPdu(address, meshMessage)
                 result.success(null)
             }
+            "sendGenericOnOffGet" -> {
+                val address = call.argument<Int>("address")!!
+                val keyIndex = call.argument<Int>("keyIndex")!!
+                val meshMessage: MeshMessage = GenericOnOffGet(
+                        mMeshManagerApi.meshNetwork!!.getAppKey(keyIndex))
+                mMeshManagerApi.createMeshPdu(address, meshMessage)
+                result.success(null)
+            }
             "sendVendorModelMessageAcked" -> {
                 val address = call.argument<Int>("address")!!
                 val modelId = call.argument<Int>("modelId")!!
